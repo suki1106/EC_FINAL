@@ -42,6 +42,8 @@ def train_population_parr(train_list, gen_num, population, batch_size, devices, 
              train_set_root, valid_set_root, exp_name, population, model_settings)
             for j in
             range(process_num)]
+        for arg in args:
+            print(arg, type(arg), dir(arg)) 
         metrics = pool.map(util_function, args)
         pool.terminate()
         metrics_.extend(metrics)
