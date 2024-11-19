@@ -145,9 +145,7 @@ class CustomDataset(Dataset):
 
         feature_tensor = torch.stack([current_tensor,dis_tensor,density_tensor],dim=0)
 
-
         ir_tensor = torch.reshape(ir_tensor,(1,ir_tensor.shape[0],ir_tensor.shape[1]))
-
 
         return self.feature_transform(feature_tensor),  self.ir_transform(ir_tensor)
 
@@ -161,13 +159,10 @@ if __name__ == '__main__':
 
     train_dl = DataLoader(train_dataset,batch_size=1,shuffle=True)
     test_dl = DataLoader(test_dataset,batch_size=1)
-
-    print(len(test_dataset))
-
-    f, l = next(iter(train_dl))
-
-    print(f.shape)
-    print(l.shape)
+    for batch in train_dl:
+        # Access data and labels (depends on your dataset)
+        inputs, labels = batch
+        print(inputs.shape, labels.shape)
 
     
 

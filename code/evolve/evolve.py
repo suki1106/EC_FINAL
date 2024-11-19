@@ -2,6 +2,8 @@ import random
 from deap import base
 from deap import creator
 from deap import tools
+from copy import deepcopy
+
 import torch.multiprocessing
 import pickle
 import os
@@ -25,7 +27,7 @@ def evolve():
     seed = 12
     random.seed(seed)
     np.random.seed(seed)
-    optimization_objects = ['f1_score']
+    optimization_objects = ['mae']
     optimization_weights = [1]
 
     channel = 20
@@ -36,10 +38,10 @@ def evolve():
     crossover_rate = 0.9
     mutation_rate = 0.7
     flipping_rate = 0.05
-    gens = 1
-    epochs = 50
+    gens = 20
+    epochs = 150
     batch_size = 1
-    parents_num = 2
+    parents_num = 10
     offsprings_num = 2
     devices = [torch.device(type='cuda', index=i) for i in range(gpu_num)]
     optimizer_name = 'Lookahead(Adam)'
@@ -51,6 +53,11 @@ def evolve():
     valid_set_name = 'ICCAD'
     train_set_root = os.path.join(os.path.abspath('.'), 'dataset/fake-circuit-data_20230623/fake-circuit-data')
     valid_set_root = os.path.join(os.path.abspath('.'), 'dataset', 'real-circuit-data_20230615')
+
+    # train_set_name = 'DRIVE'
+    # valid_set_name = 'DRIVE'
+    # train_set_root = os.path.join(os.path.abspath('.'), 'dataset', 'trainset', train_set_name)
+    # valid_set_root = os.path.join(os.path.abspath('.'), 'dataset', 'validset', valid_set_name)
 
     en_node_num_list = [en_node_num for _ in range(sample_num + 1)]
     de_node_num_list = [de_node_num for _ in range((sample_num))]
@@ -129,7 +136,6 @@ def evolve():
 
     for n in range(g + 1, gens):
 
-        from copy import deepcopy
         parents = deepcopy(population)
         new_parents = list(map(toolbox.clone, parents))
         if offspring != None:

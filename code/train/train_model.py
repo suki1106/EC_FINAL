@@ -13,6 +13,7 @@ import os
 import sys
 import numpy as np
 import random
+import torch.nn as nn
 from thop import profile
 
 from .util.get_optimizer import get_optimizer
@@ -40,7 +41,8 @@ def train_one_model(optimizer_name, learning_rate, l2_weight_decay, gen_num, ind
     model.to(device)
     model.train()
 
-    loss_func = FocalLossForSigmoid(reduction='mean').to(device)
+    #loss_func = FocalLossForSigmoid(reduction='mean').to(device)
+    loss_func = nn.L1Loss() ## mae loss
     optimizer = get_optimizer(optimizer_name, filter(lambda p: p.requires_grad, model.parameters()), learning_rate, l2_weight_decay)
 
     train_set, num_return = get_datasets(train_set_name, train_set_root, True)
@@ -49,11 +51,12 @@ def train_one_model(optimizer_name, learning_rate, l2_weight_decay, gen_num, ind
     train_loader = DataLoader(dataset=train_set, batch_size=batch_size, shuffle=True, num_workers=3)
     valid_loader = DataLoader(dataset=valid_set, batch_size=1, shuffle=False, num_workers=1)
 
-    best_f1_score = 0
+    #best_f1_score = 0
+    best_mae_score = 0 
     flag = 0
     count = 0
 
-    valid_epoch = 25 # 80
+    valid_epoch = 0
     metrics_name = ['flops', 'param', 'accuracy', 'recall', 'specificity', 'precision', 'f1_score', 'auroc', 'iou']
     metrics = {}
     for metric_name in metrics_name:
@@ -85,10 +88,14 @@ def train_one_model(optimizer_name, learning_rate, l2_weight_decay, gen_num, ind
             epoch_f1_score = AverageMeter()
             epoch_iou = AverageMeter()
             epoch_auroc = AverageMeter()
+            epoch_mae = AverageMeter()
 
             if (i >= valid_epoch):
                 with torch.no_grad():
                     model.eval()
+
+                    print('val_dataset_len:{}'.format(len(valid_set)))
+
                     valid_tqdm_batch = tqdm(iterable=valid_loader, total=numpy.ceil(len(valid_set) / 1))
                     
                     for images, targets in valid_tqdm_batch:
@@ -96,6 +103,15 @@ def train_one_model(optimizer_name, learning_rate, l2_weight_decay, gen_num, ind
                         targets = targets.to(device)
                         preds = model(images)
 
+
+                        ## compute mae ##
+                        pred_n = preds.cpu().numpy()
+                        targets_n = targets.cpu().numpy()
+
+                        mae = np.mean(abs(pred_n - targets_n))
+                        ####
+
+    
                         (acc, recall, specificity, precision,
                          f1_score, iou, auroc) = calculate_metrics(preds=preds, targets=targets, device=device)
                         epoch_acc.update(acc)
@@ -105,6 +121,9 @@ def train_one_model(optimizer_name, learning_rate, l2_weight_decay, gen_num, ind
                         epoch_f1_score.update(f1_score)
                         epoch_iou.update(iou)
                         epoch_auroc.update(auroc)
+                        epoch_mae.update(mae)
+
+                        
 
                     if i == valid_epoch:
                         flops, param = profile(model=model, inputs=(images,), verbose=False)
@@ -112,15 +131,16 @@ def train_one_model(optimizer_name, learning_rate, l2_weight_decay, gen_num, ind
                         param = param / 1e6
                   
                     print('gens_{} individual_{}_epoch_{} validate end'.format(gen_num, ind_num, i))
-                    print('acc:{} | recall:{} | spe:{} | pre:{} | f1_score:{} | auroc:{}'
-                          .format(epoch_acc.val,
-                                  epoch_recall.val,
-                                  epoch_specificity.val,
-                                  epoch_precision.val,
-                                  epoch_f1_score.val,
-                                  epoch_auroc.val))
-                    if epoch_f1_score.val > best_f1_score:
-                        best_f1_score = epoch_f1_score.val
+                    # print('acc:{} | recall:{} | spe:{} | pre:{} | f1_score:{} | auroc:{} |'
+                    #       .format(epoch_acc.val,
+                    #               epoch_recall.val,
+                    #               epoch_specificity.val,
+                    #               epoch_precision.val,
+                    #               epoch_f1_score.val,
+                    #               epoch_auroc.val))
+                    print('mae: {}'.format(epoch_mae.val))
+                    if epoch_mae.val > best_mae_score:
+                        best_mae_score = epoch_mae.val
 
                         flag = i
                         count = 0
@@ -143,6 +163,8 @@ def train_one_model(optimizer_name, learning_rate, l2_weight_decay, gen_num, ind
                                 metrics[key] = epoch_auroc.val
                             elif key == 'iou':
                                 metrics[key] = epoch_iou.val
+                            elif key == 'mae':
+                                metrics[key] = epoch_mae.val
                             else:
                                 raise NotImplementedError
 
@@ -164,20 +186,26 @@ def train_one_model(optimizer_name, learning_rate, l2_weight_decay, gen_num, ind
                         if i >= valid_epoch:
                             count += 1
 
-                    end = None
-                    if i > valid_epoch + 15 and best_f1_score < 0.50:
-                        end = True
-                    if (count >= 25) or end:
-                        print('current best epoch_{} best_f1_score:'.format(flag), best_f1_score)
+                    # end = None
+                    # if i > valid_epoch + 15 and best_f1_score < 0.50:
+                    #     end = True
+                    if (count >= 25):
+                       # print('current best epoch_{} best_f1_score:'.format(flag), best_f1_score)
+                        print('current best epoch_{} best_mae_score:'.format(flag), best_mae_score)
                         print('gens_{} individual_{} train early stop'.format(gen_num, ind_num))
                         print('=======================================================================')
                         valid_tqdm_batch.close()
                         return metrics, True
-                    print('current best epoch_{} best_f1_score:'.format(flag), best_f1_score)
+                    #print('current best epoch_{} best_f1_score:'.format(flag), best_f1_score)
+                    print('current best epoch_{} best_mae_score:'.format(flag), best_mae_score)
+
                     valid_tqdm_batch.close()
-        print('current best epoch_{} best_f1_score:'.format(flag), best_f1_score)
+        #print('current best epoch_{} best_f1_score:'.format(flag), best_f1_score)
+        print('current best epoch_{} best_mae_score:'.format(flag), best_mae_score)
+
         print('=======================================================================')
     except RuntimeError as exception:
+        print(exception)
         images.detach_()
         del images
         del model

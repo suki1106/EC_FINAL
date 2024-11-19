@@ -13,12 +13,18 @@ from copy import deepcopy
 
 # np.seterr(divide='ignore', invalid='ignore')
 
-
+# get_binary_confusion_matrix need to fix
 def calculate_metrics( preds, targets, device,config=None):
     curr_TP, curr_FP, curr_TN, curr_FN = get_binary_confusion_matrix(
-        input_=preds, target=targets, device=device, pixel=0,
+        input_=preds, target_=targets, device=device, pixel=0,
         threshold=0.5,
         reduction='sum')
+    
+    print(curr_TP)
+    print(curr_FP)
+    print(curr_TN)
+    print(curr_FN)
+
 
     curr_acc = get_accuracy(true_positive=curr_TP,
                             false_positive=curr_FP,
@@ -42,7 +48,8 @@ def calculate_metrics( preds, targets, device,config=None):
                        false_positive=curr_FP,
                        false_negative=curr_FN)
 
-    curr_auroc = get_auroc(preds, targets)
+    #curr_auroc = get_auroc(preds, targets) # ignore first
+    curr_auroc = 0
 
     return (curr_acc, curr_recall, curr_specificity, curr_precision,
             curr_f1_score, curr_iou, curr_auroc)
