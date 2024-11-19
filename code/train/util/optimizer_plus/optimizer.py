@@ -32,7 +32,8 @@ class Lookahead(Optimizer):
             for p,q in zip(group['params'],slow_weights):
                 if p.grad is None:
                     continue
-                q.data.add_(self.alpha,p.data - q.data)
+                # q.data.add_(self.alpha,p.data - q.data)
+                q.data.add_(p.data - q.data, alpha=self.alpha) 
                 p.data.copy_(q.data)
         return loss
 

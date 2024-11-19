@@ -17,6 +17,11 @@ def get_optimizer(optimizer_name, params, learning_rate, l2_weight_decay):
         base_optimizer = Adam(params=params, lr=learning_rate, weight_decay=l2_weight_decay)
         optimizer = Lookahead(base_optimizer=base_optimizer)
 
+    elif optimizer_name == 'Adam_gpt':
+        from torch_optimizer import Lookahead
+        from torch.optim import Adam
+        base_optimizer = Adam(params=params, lr=learning_rate, weight_decay=l2_weight_decay)
+        optimizer = Lookahead(base_optimizer, k=5, alpha=0.5)
     else:
         raise NotImplementedError
 

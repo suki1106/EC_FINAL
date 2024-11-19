@@ -14,7 +14,7 @@ from torch.nn import functional as F
 #device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 def get_binary_confusion_matrix(input_, target, device, pixel = None, threshold=0.5,
-                                reduction='sum'):
+                                reduction='none'):
     """
     Get binary confusion matrix
 
@@ -39,8 +39,9 @@ def get_binary_confusion_matrix(input_, target, device, pixel = None, threshold=
         raise ValueError('{}, {}, {}'.format(target.max(),target.min(),target.unique().numel()))
 
     input_threshed = input_.clone()
-    input_threshed[input_ < threshold] = 0.0
-    input_threshed[input_ >= threshold] = 1.0
+    # input_threshed[input_ < threshold] = 0.0
+    # input_threshed[input_ >= threshold] = 1.0
+    input_threshed = (input_threshed > threshold).int()
     
     target_neg = -1.0 * (target - 1.0)
     input_threshed_neg = -1.0 * (input_threshed - 1.0)
