@@ -216,7 +216,7 @@ class Net(nn.Module):
         for _ in range(sample_num):
 
 
-            ## channel數量固定，彈性較小，所以performance可能比較差
+            ## number of filters fixed
             self.up_operations.append(
                 nn.ConvTranspose2d(in_channels=channel, out_channels=channel, kernel_size=2, stride=2))
 
