@@ -42,7 +42,7 @@ def train_one_model(optimizer_name, learning_rate, l2_weight_decay, gen_num, ind
     model.train()
 
     #loss_func = FocalLossForSigmoid(reduction='mean').to(device)
-    loss_func = nn.L1Loss() ## mae loss
+    loss_func = nn.L1Loss().to(device) ## mae loss
     optimizer = get_optimizer(optimizer_name, filter(lambda p: p.requires_grad, model.parameters()), learning_rate, l2_weight_decay)
 
     train_set, num_return = get_datasets(train_set_name, train_set_root, True)
@@ -52,12 +52,12 @@ def train_one_model(optimizer_name, learning_rate, l2_weight_decay, gen_num, ind
     valid_loader = DataLoader(dataset=valid_set, batch_size=1, shuffle=False, num_workers=1)
 
     #best_f1_score = 0
-    best_mae_score = 0 
+    best_mae_score = 999999999.0 
     flag = 0
     count = 0
 
-    valid_epoch = 0
-    metrics_name = ['flops', 'param', 'accuracy', 'recall', 'specificity', 'precision', 'f1_score', 'auroc', 'iou']
+    valid_epoch = 25 # 25
+    metrics_name = ['flops', 'param', 'accuracy', 'recall', 'specificity', 'precision', 'f1_score', 'auroc', 'iou' , 'mae']
     metrics = {}
     for metric_name in metrics_name:
         if metric_name == 'flops' or metric_name == 'param':
@@ -139,11 +139,12 @@ def train_one_model(optimizer_name, learning_rate, l2_weight_decay, gen_num, ind
                     #               epoch_f1_score.val,
                     #               epoch_auroc.val))
                     print('mae: {}'.format(epoch_mae.val))
-                    if epoch_mae.val > best_mae_score:
+
+                    ## less mae better
+                    if epoch_mae.val < best_mae_score:
                         best_mae_score = epoch_mae.val
 
                         flag = i
-                        count = 0
                         for key in list(metrics):
                             if key == 'flops':
                                 metrics[key] = flops

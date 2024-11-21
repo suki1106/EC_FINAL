@@ -236,7 +236,7 @@ class Net(nn.Module):
 
         self.final_conv = nn.Conv2d(in_channels=channel, out_channels=out_ch, kernel_size=1, stride=1)
         self.sigmoid = nn.Sigmoid()
-        self.size_x = 0
+        self.size_x = 0 
         self.size_y = 0
 
     def forward(self, x):
@@ -257,7 +257,7 @@ class Net(nn.Module):
                 out = op(self.up_operations[i](out) + encode_outputs[-(2 + i)])
 
         out = self.final_conv(out)
-        out = self.sigmoid(out)
+        #out = self.sigmoid(out)
         out = out[:, :, 0:self.size_x, 0:self.size_y]
 
         return out

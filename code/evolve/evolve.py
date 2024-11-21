@@ -30,7 +30,7 @@ def evolve():
     optimization_objects = ['mae']
     optimization_weights = [1]
 
-    channel = 20
+    channel = 16
     en_node_num = 5
     de_node_num = 5
     sample_num = 3
@@ -38,11 +38,11 @@ def evolve():
     crossover_rate = 0.9
     mutation_rate = 0.7
     flipping_rate = 0.05
-    gens = 20
-    epochs = 150
+    gens = 20 # 20
+    epochs = 75 # 70
     batch_size = 1
-    parents_num = 10
-    offsprings_num = 2
+    parents_num = 10 # 10
+    offsprings_num = 10 #10
     devices = [torch.device(type='cuda', index=i) for i in range(gpu_num)]
     optimizer_name = 'Lookahead(Adam)'
     learning_rate = 0.001
@@ -75,8 +75,13 @@ def evolve():
     model_settings = {'channel': channel, 'en_node_num_list': en_node_num_list, 'de_node_num_list': de_node_num_list,
                       'sample_num': sample_num, 'en_func_type': func_type, 'de_func_type': func_type}
 
-    creator.create("FitnessMax", base.Fitness, weights=optimization_weights)
-    creator.create("Individual", list, fitness=creator.FitnessMax)
+    #creator.create("FitnessMax", base.Fitness, weights=optimization_weights)
+    #creator.create("Individual", list, fitness=creator.FitnessMax)
+
+    creator.create("FitnessMin", base.Fitness, weights=(-1.0,)) ## To minimize mse
+    creator.create("Individual", list, fitness=creator.FitnessMin)
+    
+    
     toolbox = base.Toolbox()
     toolbox.register("attr_bool", random.randint, 0, 1)
     toolbox.register("individual", tools.initRepeat, creator.Individual, toolbox.attr_bool, gene_len)
