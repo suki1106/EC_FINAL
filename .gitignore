@@ -1,3 +1,4 @@
 test.py
-/dataset/
+dataset/
 __pycache__/
+exps/test/runs

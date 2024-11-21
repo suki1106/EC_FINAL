@@ -20,10 +20,10 @@ def calculate_metrics( preds, targets, device,config=None):
         threshold=0.5,
         reduction='sum')
     
-    print(curr_TP)
-    print(curr_FP)
-    print(curr_TN)
-    print(curr_FN)
+    # print(curr_TP)
+    # print(curr_FP)
+    # print(curr_TN)
+    # print(curr_FN)
 
 
     curr_acc = get_accuracy(true_positive=curr_TP,

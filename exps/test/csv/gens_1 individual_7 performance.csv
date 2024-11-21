@@ -1,0 +1,2 @@
+,epoch,individual,acc,recall,specificity,precision,f1_score,iou,auroc
+0,1,7,0.9987450885417095,0.0,0.9996886295098818,0.0,0.0,0.0,0.0
